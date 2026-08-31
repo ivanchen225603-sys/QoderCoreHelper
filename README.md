@@ -1,4 +1,4 @@
-# swe-pipeline —— 软件工程全流程流水线 Skill（Qoder）
+# qoder-core-helper —— 软件工程全流程流水线 Skill（Qoder）
 
 把一句话需求或一份 PRD 自动推进到可发布的最后一步：七个环节
 （需求架构 → 实现 → 测试 → 评审 → 安全 → 发布准备 → 发布）由状态机串联，
@@ -9,9 +9,9 @@
 
 ```
 1. git clone https://github.com/ivanchen225603-sys/QoderCoreHelper.git
-2. 把本仓库整个目录复制为技能目录（目录名必须叫 swe-pipeline）：
-   - 个人级（跨项目可用）:  ~/.qoder-cn/skills/swe-pipeline/
-   - 项目级（随仓库共享）:  <项目>/.qoder/skills/swe-pipeline/
+2. 把本仓库整个目录复制为技能目录（目录名必须叫 qoder-core-helper）：
+   - 个人级（跨项目可用）:  ~/.qoder-cn/skills/qoder-core-helper/
+   - 项目级（随仓库共享）:  <项目>/.qoder/skills/qoder-core-helper/
 3. 在 Qoder 里说"从需求到上线做一个 ×××"即可触发；
    首次使用会自动执行初始化（需要 python 在 PATH）。
 ```
@@ -20,7 +20,7 @@ Windows 示例（PowerShell）：
 
 ```powershell
 git clone https://github.com/ivanchen225603-sys/QoderCoreHelper.git
-Copy-Item -Recurse .\QoderCoreHelper "$env:USERPROFILE\.qoder-cn\skills\swe-pipeline"
+Copy-Item -Recurse .\QoderCoreHelper "$env:USERPROFILE\.qoder-cn\skills\qoder-core-helper"
 ```
 
 ## 恢复后自检（1 分钟）
