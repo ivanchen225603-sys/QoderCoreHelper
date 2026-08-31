@@ -1,0 +1,10 @@
+{
+  "name": "pytest",
+  "kind": "test",
+  "detect": {"type": "python_module", "value": "pytest"},
+  "run": ["python", "-m", "pytest", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "pytest 不可用：测试类检查标记降级，属需用户决策（补装依赖 / 换测试方案 / 接受降级），不许静默放行"
+  }
+}

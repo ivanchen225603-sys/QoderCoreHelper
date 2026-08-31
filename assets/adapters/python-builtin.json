@@ -1,0 +1,6 @@
+{
+  "name": "python-builtin",
+  "kind": "builtin",
+  "detect": {"type": "always", "value": ""},
+  "degrade": {"mode": "none_needed", "notice": "内置实现，恒可用"}
+}

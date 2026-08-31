@@ -1,0 +1,74 @@
+{
+  "_doc": "python 栈门禁模板。关卡归属：G2=构建/lint/类型/密钥（实现结束时还没有独立测试，测试归 G3）；G3=独立测试套件+覆盖率+E2E；G5=安全扫描；G6=发布物。阈值随环境递增（不变量 13）。修改门禁配置属于生成待批项，必须在关卡上单独列出（不变量 14）。内置脚本路径指安装后的 .pipeline/scripts。on_fail: self_heal=修法确定可自动修（上限 2 轮）/ needs_decision=修法与代价不唯一，必须问用户。",
+  "checks": [
+    {
+      "id": "compile",
+      "adapter": "python-builtin",
+      "run": [["python", "-m", "compileall", "-q", "src"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "self_heal"
+    },
+    {
+      "id": "lint",
+      "adapter": "ruff",
+      "run": [["python", "-m", "ruff", "check", "src"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "self_heal"
+    },
+    {
+      "id": "typecheck",
+      "adapter": "mypy",
+      "run": [["python", "-m", "mypy", "src", "--ignore-missing-imports"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "secrets",
+      "adapter": "gitleaks",
+      "run": [["gitleaks", "detect", "--no-banner", "--exit-code", "1"]],
+      "builtin": [["python", ".pipeline/scripts/secretscan.py"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2", "G5"],
+      "on_fail": "needs_decision",
+      "no_exempt": true
+    },
+    {
+      "id": "unit_tests",
+      "adapter": "pytest",
+      "run": [["python", "-m", "pytest", "tests", "-q",
+                "--cov=src", "--cov-report=json:coverage.json"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G3"],
+      "on_fail": "self_heal",
+      "thresholds": {"dev": 60, "staging": 75, "prod": 85},
+      "probe": {"type": "coverage", "file": "coverage.json"}
+    },
+    {
+      "id": "e2e",
+      "adapter": "playwright",
+      "run": [["playwright", "--version"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G3"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "image_non_root",
+      "adapter": "python-builtin",
+      "run": [["python", ".pipeline/scripts/image_check.py"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G6"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "ci_definition",
+      "adapter": "python-builtin",
+      "run": [["python", ".pipeline/scripts/ci_check.py"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G6"],
+      "on_fail": "needs_decision"
+    }
+  ]
+}

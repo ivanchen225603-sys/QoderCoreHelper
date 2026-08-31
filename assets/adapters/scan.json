@@ -1,0 +1,10 @@
+{
+  "name": "gitleaks",
+  "kind": "scan",
+  "detect": {"type": "binary", "value": "gitleaks"},
+  "run": ["gitleaks", "version"],
+  "degrade": {
+    "mode": "fallback_builtin",
+    "notice": "gitleaks 不可用：密钥扫描切换为内置正则扫描器（精度较低但绝不停扫），关卡卡片会注明本次使用的是兜底层"
+  }
+}

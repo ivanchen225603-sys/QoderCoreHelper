@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 流水线运行产物（属于目标项目，不属于技能本体）
+.pipeline/
+
+# 本地调试残留
+*.tmp
+.DS_Store
+Thumbs.db

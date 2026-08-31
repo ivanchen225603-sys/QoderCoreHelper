@@ -1,0 +1,11 @@
+{
+  "name": "github-actions",
+  "kind": "ci",
+  "_doc": "CI 适配器：CI 定义生成后由平台执行。智能体绝不触碰生产执行；CI 定义的权限范围与凭据引用方式是生成待批项。探测看 git（没有 git 就没有可挂 CI 的仓库）。",
+  "detect": {"type": "binary", "value": "git"},
+  "run": ["git", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "无 git/CI 宿主：CI 定义照常生成，但无法挂接执行；门禁改由本地脚本等价执行，关卡上注明'本地执行不等价于受管 CI'"
+  }
+}

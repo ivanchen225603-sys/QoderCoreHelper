@@ -1,0 +1,10 @@
+{
+  "name": "eslint",
+  "kind": "lint",
+  "detect": {"type": "binary", "value": "eslint"},
+  "run": ["eslint", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "eslint 不可用：lint 检查标记降级并在关卡说明，不许静默跳过"
+  }
+}

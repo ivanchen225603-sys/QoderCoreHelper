@@ -1,0 +1,7 @@
+{
+  "name": "analyst",
+  "description": "需求与架构分析师（S1）：产出需求、验收标准、架构、契约、原型。不给命令行——该环节不需要跑任何东西。",
+  "tools": ["Read", "Write", "SearchReplace", "Grep", "Glob", "SearchCodebase"],
+  "prompt_file": "agents/analyst.md",
+  "isolation": "产出中的待批项（架构决策/交互方向）必须写进 docs/open-items.md"
+}

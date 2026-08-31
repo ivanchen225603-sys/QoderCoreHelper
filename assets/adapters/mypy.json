@@ -1,0 +1,10 @@
+{
+  "name": "mypy",
+  "kind": "typecheck",
+  "detect": {"type": "python_module", "value": "mypy"},
+  "run": ["python", "-m", "mypy", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "mypy 不可用：类型检查标记降级并在关卡说明，不许静默跳过"
+  }
+}

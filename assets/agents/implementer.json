@@ -1,0 +1,7 @@
+{
+  "name": "implementer",
+  "description": "实现者（S2）：按工单的 owns 写代码。只写 owns 声明的文件，独占。",
+  "tools": ["Read", "Write", "SearchReplace", "edit_file", "Bash", "Grep", "Glob", "SearchCodebase", "LSP", "GetProblems"],
+  "prompt_file": "agents/implementer.md",
+  "isolation": "实现思路说明不得交给评审者；完成后只落代码与 dod 文件"
+}

@@ -1,0 +1,74 @@
+{
+  "_doc": "node 栈门禁模板。阈值随环境递增（不变量 13）。修改门禁配置属于生成待批项，必须在关卡上单独列出（不变量 14）。",
+  "checks": [
+    {
+      "id": "build",
+      "adapter": "npm",
+      "run": [["npm", "run", "build", "--if-present"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "self_heal"
+    },
+    {
+      "id": "lint",
+      "adapter": "eslint",
+      "run": [["npx", "--no-install", "eslint", "src", "--max-warnings=0"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "self_heal"
+    },
+    {
+      "id": "typecheck",
+      "adapter": "tsc",
+      "run": [["npx", "--no-install", "tsc", "--noEmit"]],
+      "env": ["staging", "prod"],
+      "gates": ["G2"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "unit_tests",
+      "adapter": "jest",
+      "run": [["npx", "--no-install", "jest", "--coverage",
+               "--coverageReporters=json-summary"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G3"],
+      "on_fail": "self_heal",
+      "thresholds": {"dev": 60, "staging": 75, "prod": 85},
+      "probe": {"type": "coverage", "file": "coverage/coverage-summary.json"}
+    },
+    {
+      "id": "secrets",
+      "adapter": "gitleaks",
+      "run": [["gitleaks", "detect", "--no-banner", "--exit-code", "1"]],
+      "builtin": [["python", ".pipeline/scripts/secretscan.py"]],
+      "env": ["dev", "staging", "prod"],
+      "gates": ["G2", "G5"],
+      "on_fail": "needs_decision",
+      "no_exempt": true
+    },
+    {
+      "id": "e2e",
+      "adapter": "playwright",
+      "run": [["npx", "--no-install", "playwright", "test"]],
+      "env": ["staging", "prod"],
+      "gates": ["G3"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "image_non_root",
+      "adapter": "python-builtin",
+      "run": [["python", ".pipeline/scripts/image_check.py"]],
+      "env": ["prod"],
+      "gates": ["G6"],
+      "on_fail": "needs_decision"
+    },
+    {
+      "id": "ci_definition",
+      "adapter": "python-builtin",
+      "run": [["python", ".pipeline/scripts/ci_check.py"]],
+      "env": ["prod"],
+      "gates": ["G6"],
+      "on_fail": "needs_decision"
+    }
+  ]
+}

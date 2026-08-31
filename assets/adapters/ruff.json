@@ -1,0 +1,10 @@
+{
+  "name": "ruff",
+  "kind": "lint",
+  "detect": {"type": "python_module", "value": "ruff"},
+  "run": ["python", "-m", "ruff", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "ruff 不可用：lint 检查标记降级并在关卡说明，不许静默跳过"
+  }
+}

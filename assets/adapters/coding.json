@@ -1,0 +1,10 @@
+{
+  "name": "qoder-agent",
+  "kind": "coding",
+  "_doc": "编码适配器：把实现工作派发给子 Agent（主会话用 Agent 工具）。平台能力依赖项，探测恒真；真正的能力降级是'不能派发子 Agent'，由 config.capabilities.subagents 表达，降级为单会话串行执行，工单账本照用。",
+  "detect": {"type": "always", "value": ""},
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "无法派发子 Agent：退回单会话串行执行，工单账本仍记录全部认领/完成，作为审计留痕"
+  }
+}

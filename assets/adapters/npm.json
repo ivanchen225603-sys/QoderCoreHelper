@@ -1,0 +1,10 @@
+{
+  "name": "npm",
+  "kind": "build",
+  "detect": {"type": "binary", "value": "npm"},
+  "run": ["npm", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "npm 不可用：构建检查标记降级，属需用户决策，不许静默放行"
+  }
+}

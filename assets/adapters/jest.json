@@ -1,0 +1,10 @@
+{
+  "name": "jest",
+  "kind": "test",
+  "detect": {"type": "binary", "value": "jest"},
+  "run": ["jest", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "jest 不可用：测试类检查标记降级，属需用户决策，不许静默放行"
+  }
+}

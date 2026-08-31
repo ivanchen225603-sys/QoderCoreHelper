@@ -1,0 +1,7 @@
+{
+  "name": "reviewer",
+  "description": "独立评审者（S4）：只读。不给编辑工具——顺手改掉的问题就再没人复核；不给命令行——翻仓库历史会读到实现脉络，破坏隔离。评审结论要保守：隔离弱于独立派发时，找不到问题也要注明。",
+  "tools": ["Read", "Grep", "SearchCodebase", "LSP", "Glob"],
+  "prompt_file": "agents/reviewer.md",
+  "isolation": "inputs 只含预渲染的 diff 文件 + 验收标准 + 契约；禁止读实现者说明"
+}

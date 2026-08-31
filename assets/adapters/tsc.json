@@ -1,0 +1,10 @@
+{
+  "name": "tsc",
+  "kind": "typecheck",
+  "detect": {"type": "binary", "value": "tsc"},
+  "run": ["tsc", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "tsc 不可用：类型检查标记降级并在关卡说明，不许静默跳过"
+  }
+}

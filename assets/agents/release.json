@@ -1,0 +1,7 @@
+{
+  "name": "release",
+  "description": "发布工程师（S6）：产出 Dockerfile/CI 定义/运行手册/回滚剧本/发布说明。发布执行本身是第三档——做到可执行的最后一步，按按钮的必须是人。",
+  "tools": ["Read", "Write", "SearchReplace", "Bash", "Grep", "Glob", "SearchCodebase"],
+  "prompt_file": "agents/release.md",
+  "isolation": "凭据只允许占位符与注入机制；生产执行命令只列出不运行"
+}

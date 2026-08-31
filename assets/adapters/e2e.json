@@ -1,0 +1,10 @@
+{
+  "name": "playwright",
+  "kind": "e2e",
+  "detect": {"type": "binary", "value": "playwright"},
+  "run": ["playwright", "--version"],
+  "degrade": {
+    "mode": "mark_degraded",
+    "notice": "E2E 工具不可用：该项检查标记为降级，关卡上必须写明'E2E 未执行'并给出人工核对清单——明说这不等价于自动化 E2E，不许当成已测"
+  }
+}

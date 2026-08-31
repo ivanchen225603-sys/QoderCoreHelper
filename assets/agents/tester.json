@@ -1,0 +1,7 @@
+{
+  "name": "tester",
+  "description": "测试编写者（S3）：只拿验收标准+接口契约写测试，拿不到实现代码。照着实现写的测试会把实现里的理解错误固化成'预期行为'。",
+  "tools": ["Read", "Grep", "Glob", "SearchCodebase", "Write", "SearchReplace", "Bash"],
+  "prompt_file": "agents/tester.md",
+  "isolation": "inputs 只含 docs/acceptance.md 与 docs/api-contract.md；禁止读 src/"
+}

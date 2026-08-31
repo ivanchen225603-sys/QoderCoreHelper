@@ -1,0 +1,7 @@
+{
+  "name": "doc-writer",
+  "description": "文档作者：写运行手册、发布说明等交付文档。不给命令行——这个环节不需要跑任何东西。",
+  "tools": ["Read", "Write", "SearchReplace", "Grep", "Glob", "SearchCodebase"],
+  "prompt_file": "agents/doc-writer.md",
+  "isolation": "法律合规文本绝不生成，遇到就上报主会话"
+}

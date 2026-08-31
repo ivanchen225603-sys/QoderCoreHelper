@@ -1,0 +1,7 @@
+{
+  "name": "gate-runner",
+  "description": "门禁执行者：独立角色，吃掉几百行原始日志，只回传关卡卡片（判定+计数+归类+证据路径）。不给任何写工具——它不可能'顺手把门禁弄绿'，结论才可信。它不判定放行，也没有问用户的能力。",
+  "tools": ["Bash", "Read", "Grep", "Glob"],
+  "prompt_file": "agents/gate-runner.md",
+  "isolation": "只允许执行 .pipeline/scripts/ 下的门禁命令；原始输出落证据文件，不回传主会话"
+}
