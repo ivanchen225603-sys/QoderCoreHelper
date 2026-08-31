@@ -27,6 +27,7 @@ Copy-Item -Recurse .\QoderCoreHelper "$env:USERPROFILE\.qoder-cn\skills\qoder-co
 
 ```
 python scripts/test_pipeline.py      # 期望：Ran 31 tests — OK
+python acceptance_battery.py         # 端到端验收：11 项违例全部被正确拒绝（期望：全部符合预期）
 ```
 
 回归测试每个用例钉死一个真实缺陷类；跑不过说明环境或文件有缺，
