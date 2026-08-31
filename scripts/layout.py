@@ -106,6 +106,21 @@ ROLE_TOOL_POLICY = {
                              "Glob", "SearchCodebase"]},
 }
 
+# Qoder 原生子代理的工具词表（.qoder/agents/*.md 的 tools 字段）。
+# 为什么单独一份：原生子代理只认 Bash/Read/Write/Edit/Grep/Glob 等固定
+# 词，与 IDE 会话工具名不同。安装时同样校验"放宽即拒"（不变量 11）。
+# 隔离设计：评审者无 Edit/Write/Bash；门禁执行者无 Write/Edit；
+# 分析师与文档作者无 Bash。
+QODER_NATIVE_TOOL_POLICY = {
+    "analyst": ["Read", "Write", "Edit", "Grep", "Glob"],
+    "implementer": ["Read", "Write", "Edit", "Bash", "Grep", "Glob"],
+    "tester": ["Read", "Write", "Edit", "Bash", "Grep", "Glob"],
+    "reviewer": ["Read", "Grep", "Glob"],
+    "gate-runner": ["Bash", "Read", "Grep", "Glob"],
+    "release": ["Read", "Write", "Edit", "Bash", "Grep", "Glob"],
+    "doc-writer": ["Read", "Write", "Edit", "Grep", "Glob"],
+}
+
 # 门禁脚本允许执行的前缀白名单：门禁执行者角色只能跑这些命令，
 # 防止"评审/门禁角色借 Bash 做别的"。
 GATE_RUNNER_ALLOWED_CMDS = ("python", "python3", "node", "npm", "npx",

@@ -153,6 +153,37 @@ def stage_gate(stage):
     return layout.GATE_OF_STAGE[stage]
 
 
+# 返工工单的角色归属：打回后由谁接返工（与环节主角色一致，评审打回由实现者修）
+REWORK_ROLE = {"S1": "analyst", "S2": "implementer", "S3": "tester",
+               "S4": "implementer", "S5": "implementer", "S6": "release",
+               "S7": "release"}
+
+
+def _add_rework_ticket(project, gate, stage, reason, seq):
+    """打回时自动登记返工工单：把打回原因带进下游，而不是躺在日志里。
+
+    返工说明必须写进 docs/rework-<gate>.md（dod 会核验存在）：
+    逐条回应打回原因怎么解决的，没写清楚就不算返工完成。
+    同一关卡已有未完成返工单时不重复登记（owns 会撞）。"""
+    pp = _paths(project)
+    tickets = pio.load_json(pp["tickets"], default={"tickets": []})
+    note = "docs/rework-%s.md" % gate.lower()
+    for t in tickets["tickets"]:
+        if t["status"] != "done" and note in t["owns"]:
+            return None  # 已有未完成返工单，不重复登记
+    tid = "R-%s-%d" % (gate, seq)
+    brief = reason if len(reason) <= 40 else reason[:39] + "…"
+    tickets["tickets"].append({
+        "id": tid, "title": "返工 %s：%s" % (gate, brief),
+        "role": REWORK_ROLE[stage], "inputs": [],
+        "owns": [note], "requires": [], "dod": [note],
+        "status": "open", "claimed_by": None, "claimed_at": None,
+        "done_at": None,
+    })
+    pio.save_json(pp["tickets"], tickets)
+    return tid
+
+
 def cmd_approve(args):
     pp = _paths(args.project)
     with fslock.ledger_lock(pp["root"]):
@@ -221,8 +252,16 @@ def cmd_reject(args):
             {"at": _now(), "event": "gate_rejected", "gate": gate, "by": name,
              "reason": args.reason})
         _save_state(args.project, st)
-    pio.ok("关卡 %s 已打回（打回人: %s），%s 返工中。原因: %s"
-           % (gate, name, stage, args.reason))
+        rework_id = _add_rework_ticket(args.project, gate, stage, args.reason,
+                                       len(gd["rejections"]))
+    msg = "关卡 %s 已打回（打回人: %s），%s 返工中。原因: %s" % (
+        gate, name, stage, args.reason)
+    if rework_id:
+        msg += "。已自动登记返工工单 %s（返工说明写入 docs/rework-%s.md）" % (
+            rework_id, gate.lower())
+    else:
+        msg += "。该关卡已有未完成返工工单，未重复登记"
+    pio.ok(msg)
 
 
 def cmd_heal_round(args):
@@ -257,6 +296,10 @@ def cmd_next_action(args):
             continue
         out = {"stage": stage, "stage_name": layout.STAGE_NAMES[stage],
                "gate": gate, "gate_kind": layout.GATE_KIND[gate]}
+        # 返工中的环节：把最近一次打回原因带出来，主会话不用翻日志
+        rejs = st["gates"][gate].get("rejections")
+        if rejs:
+            out["last_rejection"] = rejs[-1]
         if heal.get(gate, 0) >= layout.SELF_HEAL_MAX_ROUNDS \
                 and layout.GATE_KIND[gate] == "env":
             out["action"] = "stop_for_user"

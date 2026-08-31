@@ -26,7 +26,7 @@ Copy-Item -Recurse .\QoderCoreHelper "$env:USERPROFILE\.qoder-cn\skills\swe-pipe
 ## 恢复后自检（1 分钟）
 
 ```
-python scripts/test_pipeline.py      # 期望：Ran 29 tests — OK
+python scripts/test_pipeline.py      # 期望：Ran 31 tests — OK
 ```
 
 回归测试每个用例钉死一个真实缺陷类；跑不过说明环境或文件有缺，
@@ -37,7 +37,8 @@ python scripts/test_pipeline.py      # 期望：Ran 29 tests — OK
 ```
 SKILL.md              主执行契约（智能体加载时只读这一份）
 agents/               7 个角色的职责说明（派发子 Agent 时随工单给出）
-assets/agents/        子 Agent 注册定义（工具白名单，安装进目标项目）
+assets/agents-md/     Qoder 原生子代理定义（.md，tools 白名单由平台强制执行）
+assets/agents/        子 Agent 注册记录（JSON 留档）
 assets/gates/         门禁模板（python / node 两套，阈值随环境递增）
 assets/adapters/      外部工具适配器声明（编码/单测/扫描/CI…，各带降级方案）
 references/           按需加载的参考文档（SKILL.md 内有路由表）

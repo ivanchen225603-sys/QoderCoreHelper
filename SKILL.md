@@ -54,6 +54,8 @@ state.py approve --gate Gn --by "<用户的真实姓名>"
 ```
 state.py reject --gate Gn --by "<姓名>" --reason "<原因>"
 ```
+打回时脚本自动登记返工工单（dod = docs/rework-<gate>.md，返工说明必须逐条
+回应打回原因），`next-action` 会把最近打回原因带出来——返工派发时把它写进指令。
 
 ## 3. 环节派发（S1–S6）
 
@@ -62,8 +64,9 @@ state.py reject --gate Gn --by "<姓名>" --reason "<原因>"
 2. `tickets.py claim --id Tx --by <子Agent名>` 认领（脚本强制独占检查）。
 3. `render.py pack --ticket Tx` 渲染派发包——**派发包必须由工具渲染，
    不许手工拼**（手工拼漏了禁区不会有任何提示）。
-4. 把派发包全文作为任务发给子 Agent（Agent 工具，GeneralPurpose，
-   指令开头注明角色与派发包路径）。子 Agent 冷启动，只认派发包。
+4. 派发优先用角色同名的自定义子代理（已装入项目 .qoder/agents/，
+   工具白名单由平台强制执行：评审者拿不到编辑工具是"做不到"而非"不许做"）；
+   平台不认角色名时退回 GeneralPurpose + 派发包全文。子 Agent 冷启动，只认派发包。
 5. 子 Agent 回报后：`tickets.py done --id Tx`（脚本核验 dod 文件存在）。
 6. 全部工单 done → 环节产出齐 → 回到主循环跑关卡。
 

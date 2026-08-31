@@ -1,0 +1,31 @@
+# 自举 CI：这套东西最讲究"自己的测试自己跑"。
+# 为什么跨平台矩阵：脚本里有 Windows（msvcrt.locking）与 POSIX（fcntl）
+# 两条锁分支，本地只能跑到一条；另一条必须在矩阵里钉死，
+# 否则换台机器就可能出现"独占检查静默失效"。
+name: pipeline-regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  regression:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: 编译检查
+        run: python -m compileall -q scripts
+      - name: 回归测试（29+ 用例，每条钉死一个真实缺陷类）
+        run: python scripts/test_pipeline.py -v
+        env:
+          PYTHONIOENCODING: utf-8

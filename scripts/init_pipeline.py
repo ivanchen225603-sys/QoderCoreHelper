@@ -39,24 +39,67 @@ def detect_capabilities(project, args):
     caps["worktree"] = caps["git"]
     # 子 Agent 派发：Qoder 平台具备（Agent 工具）；单会话平台置否
     caps["subagents"] = not args.no_subagents
-    # 子 Agent 工具白名单：当前 Qoder 平台的 Agent 派发不支持限定工具集
-    # → 如实置否。隔离退回纯约定，必须显式声明（不变量 11），不许静默降级。
-    caps["tool_whitelist"] = False
+    # 子 Agent 工具白名单：Qoder 自定义子代理（.qoder/agents/*.md）支持
+    # tools 字段（2026-09 实测确认）——隔离是机制，不是约定。
+    # 非 Qoder 平台用 --no-tool-whitelist 显式降级，降级必须声明。
+    caps["tool_whitelist"] = not args.no_tool_whitelist
     return caps
 
 
+def _md_frontmatter(path):
+    """解析 .md 子代理定义的 YAML frontmatter（只取顶层 k: v）。
+    utf-8-sig 同时容忍带/不带 BOM 的文件（跨平台生成的产物不一致）。"""
+    with open(path, encoding="utf-8-sig") as f:
+        raw = f.read()
+    if not raw.startswith("---"):
+        pio.die(layout.EXIT_CONFIG, "子代理定义缺 frontmatter: %s" % path)
+    end = raw.find("---", 3)
+    fields = {}
+    for line in raw[3:end].splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            fields[k.strip()] = v.strip()
+    return fields
+
+
 def install_agent_defs(project, pp):
-    """把带工具白名单的子 Agent 定义装进目标项目。"""
+    """把带工具白名单的子 Agent 定义装进目标项目。
+    - assets/agents-md/*.md → 项目 .qoder/agents/（Qoder 原生子代理，
+      tools 白名单由平台强制执行）
+    - assets/agents/*.json  → .pipeline/agent-defs/（注册记录留档）
+    两者安装前都校验白名单未被放宽（不变量 11 的机制）。"""
+    installed = []
+    md_src = os.path.join(ASSETS, "agents-md")
+    if os.path.isdir(md_src):
+        tgt = os.path.join(project, ".qoder", "agents")
+        os.makedirs(tgt, exist_ok=True)
+        for fn in sorted(os.listdir(md_src)):
+            if not fn.endswith(".md"):
+                continue
+            spec = _md_frontmatter(os.path.join(md_src, fn))
+            role = spec.get("name")
+            policy = layout.QODER_NATIVE_TOOL_POLICY.get(role)
+            if policy is not None:
+                tools = [t.strip() for t in spec.get("tools", "").split(",")
+                         if t.strip()]
+                extra = set(tools) - set(policy)
+                if extra:
+                    pio.die(layout.EXIT_VIOLATION,
+                            "子代理定义 %s 的工具白名单被放宽（多出: %s），"
+                            "拒绝安装。放宽白名单 = 隔离失效。"
+                            % (fn, sorted(extra)))
+            shutil.copy2(os.path.join(md_src, fn), os.path.join(tgt, fn))
+            os.makedirs(os.path.join(pp["root"], "agent-defs"), exist_ok=True)
+            shutil.copy2(os.path.join(md_src, fn),
+                         os.path.join(pp["root"], "agent-defs", fn))
+            installed.append(fn)
+
     src = os.path.join(ASSETS, "agents")
     if not os.path.isdir(src):
         pio.die(layout.EXIT_CONFIG, "assets/agents 缺失，安装包不完整: %s" % src)
-    targets = [os.path.join(project, ".qoder", "agents"),
-               os.path.join(pp["root"], "agent-defs")]
-    installed = []
     for fn in sorted(os.listdir(src)):
         if not fn.endswith(".json"):
             continue
-        # 安装前校验工具白名单未被放宽（不变量 11 的机制）
         spec = pio.load_json(os.path.join(src, fn))
         role = spec.get("name")
         policy = layout.ROLE_TOOL_POLICY.get(role)
@@ -66,10 +109,9 @@ def install_agent_defs(project, pp):
                 pio.die(layout.EXIT_VIOLATION,
                         "子 Agent 定义 %s 的工具白名单被放宽（多出: %s），"
                         "拒绝安装。放宽白名单 = 隔离失效。" % (fn, sorted(extra)))
-        for tdir in targets:
-            os.makedirs(tdir, exist_ok=True)
-            shutil.copy2(os.path.join(src, fn), os.path.join(tdir, fn))
-        installed.append(fn)
+        adir = os.path.join(pp["root"], "agent-defs")
+        os.makedirs(adir, exist_ok=True)
+        shutil.copy2(os.path.join(src, fn), os.path.join(adir, fn))
     return installed
 
 
@@ -82,6 +124,8 @@ def main():
                     default=["dev", "staging", "prod"])
     ap.add_argument("--no-subagents", action="store_true",
                     help="目标平台不能派发子 Agent（单会话串行）")
+    ap.add_argument("--no-tool-whitelist", action="store_true",
+                    help="目标平台不支持限定子 Agent 工具（隔离退回纯约定）")
     ap.add_argument("--force", action="store_true",
                     help="已有 .pipeline 时覆盖重装")
     args = ap.parse_args()
@@ -190,7 +234,8 @@ def main():
                              if caps["worktree"] else
                              "不可用 → 靠文件独占检查控制并行度"),
         "子 Agent 工具白名单: %s" % (
-            "可用（隔离是机制）" if caps["tool_whitelist"] else
+            "可用（隔离是机制：原生子代理的 tools 字段由平台强制执行）"
+            if caps["tool_whitelist"] else
             "不可用 → **隔离已退回成纯约定**（评审无编辑工具等规则仅靠"
             "提示词约束）。本声明会在每次派发包与关卡卡片中重复。"),
         "子 Agent 定义已安装: %s" % ", ".join(agent_files),

@@ -118,6 +118,33 @@ class TestInit(Base):
             ip.ASSETS = old
 
 
+    def test_native_md_whitelist_widened_refused(self):
+        """钉死缺陷：原生子代理 .md 定义的工具白名单被悄悄放宽，
+        评审者重新获得编辑能力，隔离失效不可见。"""
+        self.mk_project()
+        import init_pipeline as ip
+        fake_assets = os.path.join(self.tmp, "assets2")
+        shutil.copytree(os.path.join(os.path.dirname(HERE), "assets"),
+                        fake_assets)
+        bad = os.path.join(fake_assets, "agents-md", "reviewer.md")
+        with open(bad, encoding="utf-8") as f:
+            text = f.read()
+        # 给评审者加上 Edit（编辑工具）
+        text = text.replace("tools: Read, Grep, Glob",
+                            "tools: Read, Grep, Glob, Edit", 1)
+        with open(bad, "w", encoding="utf-8") as f:
+            f.write(text)
+        old = ip.ASSETS
+        ip.ASSETS = fake_assets
+        try:
+            pp = layout.pipeline_paths(self.S)
+            with self.assertRaises(SystemExit) as ctx:
+                ip.install_agent_defs(self.S, pp)
+            self.assertEqual(ctx.exception.code, layout.EXIT_VIOLATION)
+        finally:
+            ip.ASSETS = old
+
+
 class TestStateMachine(Base):
     def test_approve_without_artifacts_refused(self):
         """钉死缺陷：产出文件不存在，放行记录却写了进去。"""
@@ -169,6 +196,37 @@ class TestStateMachine(Base):
         j = last_json(out)
         self.assertEqual(j["stage"], "S1")
         self.assertEqual(j["action"], "start_stage")
+
+    def test_reject_creates_rework_ticket(self):
+        """钉死缺陷：打回后原因只躺在日志里，下游返工拿不到输入，
+        返工者不知道要修什么。"""
+        self.mk_project()
+        run_cli([self.script("state.py"), "--project", self.S,
+                 "start", "--stage", "S1"])
+        rc, out = run_cli([self.script("state.py"), "--project", self.S,
+                           "reject", "--gate", "G1", "--by", "张三",
+                           "--reason", "架构方向不对，存储改用 SQLite"])
+        self.assertEqual(rc, 0, out)
+        self.assertIn("R-G1-1", out)
+        # 返工工单存在，dod 是返工说明文件，原因进了标题
+        rc, out = run_cli([self.script("tickets.py"), "--project", self.S,
+                           "status"])
+        j = last_json(out)
+        rw = [t for t in j["tickets"] if t["id"] == "R-G1-1"]
+        self.assertEqual(len(rw), 1)
+        self.assertEqual(rw[0]["dod"], ["docs/rework-g1.md"])
+        self.assertIn("架构方向不对", rw[0]["title"])
+        # next-action 把打回原因带出来，主会话不用翻日志
+        rc, out = run_cli([self.script("state.py"), "--project", self.S,
+                           "next-action"])
+        j = last_json(out)
+        self.assertEqual(j["last_rejection"]["reason"],
+                         "架构方向不对，存储改用 SQLite")
+        # 已有未完成返工单 → 再次打回不重复登记（owns 会撞）
+        rc, out = run_cli([self.script("state.py"), "--project", self.S,
+                           "reject", "--gate", "G1", "--by", "张三",
+                           "--reason", "再次打回：原型也要改"])
+        self.assertIn("未重复登记", out)
 
     def test_self_heal_stops_at_limit(self):
         """钉死缺陷：自愈无限循环烧钱，用户看不见。"""
@@ -569,7 +627,9 @@ class TestRender(Base):
         text = open(pack, encoding="utf-8").read()
         self.assertIn("src/b.py", text)          # 对方工单的 owns 进禁区
         self.assertIn(".pipeline/**", text)      # 全局禁区在
-        self.assertIn("隔离强度声明", text)       # 白名单不可用时如实声明
+        # 隔离强度声明：白名单可用时列工具白名单，不可用时如实声明退回约定，
+        # 两者必居其一（不许静默降级）
+        self.assertTrue("工具白名单" in text or "隔离强度声明" in text)
 
 
 if __name__ == "__main__":
